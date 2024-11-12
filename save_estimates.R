@@ -3,6 +3,9 @@ source("fitting_fun.R")
 source("simulate_fun.R")
 source("utils.R")
 ######################################################
+##' This script fits and saves all the results that will 
+##' needed for the main analysis
+######################################################
 path  =  "datasets2/"
 
 countdata_list_obs  =  readRDS(file = paste0(path,"data.rds"))
