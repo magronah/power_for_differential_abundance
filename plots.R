@@ -6,10 +6,19 @@ source("reproducible/power/fitting_fun.R")
 source("reproducible/power/read_dataset.R")
 #path = "reproducible/power/datasets/sample_size_cal/"
 ########################Test####################################################
-path  =  "reproducible/power/datasets2/"
+path  =  "datasets2/"
 countdata_list_obs  =  readRDS(file = paste0(path,"data.rds"))
 metadata_list_obs   =  readRDS(file = paste0(path,"metadata.rds"))
 ################################################################################
+View(countdata_list_obs[[1]])
+View(metadata_list_obs[[1]])
+
+
+
+
+dim(countdata_list_obs[[1]])
+
+
 #####lfc versus lm plot
 c = c(2,5,3)
 dd = foreach(i = c,.combine = "rbind") %do% {

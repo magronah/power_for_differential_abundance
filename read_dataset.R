@@ -1,4 +1,4 @@
-path = "reproducible/power/datasets/"
+path = "/power/datasets/"
 ###########################Read otu dataset###########################
    otu_dataset_list     =    readRDS(paste0(path,"otu_dataset_list.rds"))
    filtered_otu_list    =    otu_dataset_list[["filtered_otu"]]
