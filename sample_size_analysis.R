@@ -139,7 +139,6 @@ ggplot(ddf, aes(x = lmean, y= abs)) +
 
 for(j in 2:length(nsamp_vec)){
   
-  j = 2
   ncores  =  10
   cl      =   makeCluster(ncores)
   registerDoParallel(cl)
