@@ -1,10 +1,10 @@
-source("reproducible/power/Load_Packages.R")
-source("reproducible/power/fitting_fun.R")
-source("reproducible/power/simulate_fun.R")
-source("reproducible/power/utils.R")
-source("reproducible/power/read_dataset.R")
+source("Load_Packages.R")
+source("fitting_fun.R")
+source("simulate_fun.R")
+source("utils.R")
+source("save_estimates.R")
 
-fig_path = "reproducible/power/figures/"
+fig_path = "/figures/"
 
 #predict power
 res <- foreach(k =  1:7,.combine = "rbind",.packages = "tidyr") %do%{
@@ -65,12 +65,12 @@ res2 <- foreach(k =  1:7,.combine = "rbind",.packages = "tidyr") %do%{
 ggplot(res2, aes(x = notu, y = (power), group= abs_lfc, color = as.factor(abs_lfc))) +
   geom_point() +
   geom_line() + 
-  scale_color_discrete(name = "logfoldchange") +  # Change the legend name here
+  scale_color_discrete(name = "logfoldchange") +   
   facet_wrap(~ dataset, scales = "free") +
   labs(x = "sample size", color = "logfoldchange") +
   custom_theme(10) 
 
-ggsave("reproducible/power/figures/increase_ss.png")
+ggsave("figures/increase_ss.png")
 
 
 #' simulate from the 

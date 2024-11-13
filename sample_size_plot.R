@@ -1,11 +1,10 @@
-source("reproducible/power/Load_Packages.R")
-source("reproducible/power/utils.R")
-source("reproducible/power/read_dataset.R")
-source("reproducible/power/simulate_fun.R")
-path = "reproducible/power/datasets2/sample_size_cal/"
+source("Load_Packages.R")
+source("utils.R")
+source("save_estimates.R")
+source("simulate_fun.R")
+path = "/datasets/sample_size_cal/"
 fig  = paste0(path,"fig/")
 library(tidytext)
-library(metR)
 ################################################################################
 dd_lfc  = foreach(i =1:7, .combine = "rbind")%do%{
   nam   =    names(logfoldchange_list)[i]
@@ -54,6 +53,7 @@ gam_mod_list  =  foreach(i = 1:7) %do% {
   mod      =   readRDS(paste0(path,"gam_fit/",nam, ".rds"))
   mod
 }
+
 names(gam_mod_list) = names(filtered_otu_list)
 ######################################################################
 ### estimate sample size for each power with changing effect size
@@ -828,4 +828,3 @@ combined_df$pvalue_reject <- factor(combined_df$pval_reject)
 
 #Contour plot
  
-

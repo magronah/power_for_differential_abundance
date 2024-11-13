@@ -1,16 +1,13 @@
-source("reproducible/power/Load_Packages.R")
-source("reproducible/power/simulate_fun.R")
-source("reproducible/power/utils.R")
-source("reproducible/power/fitting_fun.R")
-source("reproducible/power/read_dataset.R")
-path = "reproducible/power/datasets2/sample_size_cal/"
-
-#countdata_list_obs  =  readRDS(file = paste0(path,"data.rds"))
-#metadata_list_obs   =  readRDS(file = paste0(path,"metadata.rds"))
+source("Load_Packages.R")
+source("simulate_fun.R")
+source("utils.R")
+source("fitting_fun.R")
+source("read_estimate_results.R")
+path = "data3/"
 ##############################################################
 nsim = 100; notu=1000; disp_scale = 0.3
 otu_data =  list()
-nsamp_vec = seq(30,110,20)
+nsamp_vec =  seq(30,110,20)
 
 for(i in 1:7){
   nam       =   names(dispersion_param_list)[i] 
@@ -19,7 +16,7 @@ for(i in 1:7){
   logfoldchange_param   =   logfoldchange_param_list[[i]]
   
   dd = foreach(k = 1:length(nsamp_vec)) %do% {
-    source("reproducible/power/simulate_fun.R")
+    source("simulate_fun.R")
     nsamp     =   nsamp_vec[[k]]
     countdata_sim_fun(logmean_param, logfoldchange_param, 
                       dispersion_param,
@@ -35,11 +32,12 @@ for(i in 1:7){
   otu_data[[i]] = dd
 }
 names(otu_data) = names(dispersion_param_list)  
-
 #saveRDS(otu_data, file = paste0(path,"sim_data_list.rds"))
 
-path1       =   "reproducible/power/datasets2/"
-path_deseq  =    paste0(path1,"deseq_results/")
+###############################################################
+#For each data concatenate all results from fitting with deseq
+#path        =   "datasets2/"
+path_deseq  =    paste0(path,"deseq_results/")
 
 deseq_sample_size  = foreach(i = 1:7) %:%
   foreach(j = 1:length(nsamp_vec),.combine = "rbind") %do% {
@@ -51,8 +49,10 @@ deseq_sample_size  = foreach(i = 1:7) %:%
   deseq_list 
 }
 
-path_comb =    paste0(path1,"contour_data/")
+###############################################################
+#For each data concatenate all results from fitting with deseq
 
+path_comb =    paste0(path,"contour_data/")
 true_data  = foreach(i = 1:7) %:%
   foreach(j = 1:length(nsamp_vec),.combine = "rbind") %do% {
     nam        =   names(dispersion_param_list)[i]
@@ -61,18 +61,13 @@ true_data  = foreach(i = 1:7) %:%
     ds$sample_size = rep(nsam, nrow(ds))
     ds 
   }
-
 #############################################################
+##Fit gam model and save the fitted model
 for(j in 1:7){
-  nam       =   names(dispersion_param_list)[j] 
-  #dd_otu    =   otu_data[[j]]
-  deseq_est_list  =   deseq_sample_size[[j]]
-  
-  #sim_logmean_list      =   read_data(dd, "logmean_list") 
-  #sim_logfoldchange_list       =   read_data(dd, "logfoldchange_list") 
-  true_logmean = (true_data[[j]])$lmean_abund
-  true_logfoldchange = true_data[[j]]$abs_lfc
-  #length(true_logfoldchange)
+        nam          =   names(dispersion_param_list)[j] 
+  deseq_est_list     =   deseq_sample_size[[j]]
+  true_logmean       =   (true_data[[j]])$lmean_abund
+  true_logfoldchange =   true_data[[j]]$abs_lfc
   ################################################################
   power_est       =    power_fun_ss(deseq_est_list, true_logfoldchange,
                                     true_logmean, nsamp_vec, alpha=0.1)
@@ -104,48 +99,16 @@ for(j in 1:7){
 ## load the fitted models
 path_gam      =   paste0(path,"gam_fit/")
 path_simdata  =   paste0(path,"combined_data/")
-gam_mod_list      =   comb_list  =   list()
+gam_mod_list  =   comb_list  =   list()
 
 for(i in 1:7){
-  nam         =   names(filtered_otu_list)[i]
+  nam               =   names(filtered_otu_list)[i]
   comb_list[[i]]    =   readRDS(paste0(path_simdata,nam,".rds"))
-  gam_mod_list[[i]] =   readRDS(paste0(path_gam,nam,".rds"))}
+  gam_mod_list[[i]] =   readRDS(paste0(path_gam,nam,".rds"))
+}
 
 names(gam_mod_list)   =   names(filtered_otu_list)
-names(comb_list)  =   names(filtered_otu_list)
-
-
-## Simulate data
-# nsam = 100
-# path1  =  "reproducible/power/datasets/contour_data/"
-# nam       =   names(dispersion_param_list)[1]
-# combined_data = readRDS(paste0(path1,nsam,"_samples/","combined_data_",nam,"_.rds"))
-# power_estimate = readRDS(paste0(path1,nsam,"_samples/","power_estimate_",nam,"_.rds"))
-# 
-# combined_data$pvalue_reject <- factor(combined_data$pval_reject)
-# 
-# combined_data$pvalue_reject <- factor(ifelse(combined_data$pvalue_reject == 0, 
-#                                              "No", "Yes"))
-# 
-# cont_breaks =  seq(0,1,0.1)
-# gg_2dimc <- (ggplot(combined_data)
-#              + aes(lmean_abund, abs_lfc)
-#              + rasterise(geom_point(aes(color = pvalue_reject), alpha = 0.5))
-#              + xlab(TeX("$\\log_2$(mean counts)")) 
-#              + ylab(TeX("|$\\log_2$(fold change)|")) 
-#              + scale_colour_manual(values = c("black", "red")) 
-#              + labs(color="reject null hypothesis") 
-#              + geom_contour(data = power_estimate,
-#                             aes(z=power),lwd=1,
-#                             breaks = cont_breaks)
-#              + geom_label_contour(data = power_estimate,
-#                                   aes(z= power,label = sprintf("%.3f", after_stat(level))),
-#                                   breaks = cont_breaks
-#              )
-#              + custom_theme(16)
-# )
-# gg_2dimc
-# 
+names(comb_list)      =   names(filtered_otu_list)
 
 # combined_data_list  =list()
 # for(j in 1:7){

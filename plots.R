@@ -4,9 +4,9 @@ source("utils.R")
 source("fitting_fun.R")
 source("read_estimate_results.R")
 ########################Test####################################################
-path  =  "datasets2/"
-countdata_list_obs  =  readRDS(file = paste0(path,"data.rds"))
-metadata_list_obs   =  readRDS(file = paste0(path,"metadata.rds"))
+path  =  "data/"
+countdata_list_obs  =  readRDS(file = paste0(path,"autism_data.rds"))
+metadata_list_obs   =  readRDS(file = paste0(path,"autism_metadata.rds"))
 ################################################################################
 #####Show examples of log(fold change) vrs log(mean abundance) plot
 c = c(2,5,3)
@@ -27,7 +27,6 @@ ggplot(dd, aes(logmean, logfoldchange)) +
   facet_wrap(~datatype, scale="free") 
 #########################################################################
 ##Compare simulations from HMP, metaSPARSim and our method
-
 res  = readRDS(paste0(path,"HMP_metaSPARSim_sim_compare.rds")) 
 
 HMP_list           =    read_data(res, "HMP")
@@ -36,15 +35,13 @@ our_method_list    =    read_data(res, "our_method")
 
 ### Generate comparison plot
 plt =  foreach(i = 1:length(res), .errorhandling = "pass") %do% {
-  nam       =    names(filtered_otu_list)[i]
+  
+          nam       =    names(filtered_otu_list)[i]
   countdata_obs     =    filtered_otu_list[[i]]
-  HMP       =    HMP_list[[i]]
-  metaSPARSim      =    metaSPARSim_list[[i]]
-  our_method       =    our_method_list[[i]] 
-  
-  
-  
-  countdata_sim       =    list(HMP = HMP, metaSPARSim = metaSPARSim,
+          HMP       =    HMP_list[[i]]
+   metaSPARSim      =    metaSPARSim_list[[i]]
+   our_method       =    our_method_list[[i]] 
+  countdata_sim     =    list(HMP = HMP, metaSPARSim = metaSPARSim,
                                 our_method =  our_method) 
   
   okabe_ito_colors = c("#556B2F", "#E23D28", "#0000FF","#000000")
@@ -68,7 +65,41 @@ pp1  =   (mean_plt[[1]]|mean_plt[[2]]|mean_plt[[3]]) +  plot_layout(guides = "co
 pp2  =   (var_plt[[1]]|var_plt[[2]]|var_plt[[3]])   +  plot_layout(guides = "collect")  
 
 pp1/pp2
+###############################################################################
+nsamp      =   100
+path1      =   paste0(path,"contour_data/",nsamp,"_samples/")
+pltt   =   list()
+for(i in 1:7){
+  nam            =   names(dispersion_param_list)[i]
+  combined_data  =   readRDS(paste0(path1,"combined_data_",nam,"_.rds"))
+  power_estimate =   readRDS(paste0(path1,"power_estimate_",nam,"_.rds"))
+  
+  combined_data$pvalue_reject <- factor(combined_data$pval_reject)
+  combined_data$pvalue_reject <- factor(ifelse(combined_data$pvalue_reject == 0,
+                                               "No", "Yes"))
+  
+  cont_breaks =  seq(0,1,0.1)
+  pltt[[i]] <- (ggplot(combined_data)
+                    + aes(lmean_abund, abs_lfc)
+                    + rasterise(geom_point(aes(color = pvalue_reject), alpha = 0.5))
+                    + xlab(TeX("$\\log_2$(mean counts)"))
+                    + ylab(TeX("|$\\log_2$(fold change)|"))
+                    + scale_colour_manual(values = c("black", "red"))
+                    + labs(color="reject null hypothesis")
+                    + geom_contour(data = power_estimate,
+                                   aes(z=power),lwd=1,
+                                   breaks = cont_breaks)
+                    + geom_label_contour(data = power_estimate,
+                                         aes(z= power,label = sprintf("%.3f", after_stat(level))),
+                                         breaks = cont_breaks
+                    )
+  )
+  
+}
 
+(pltt[[1]] | pltt[[2]] | pltt[[3]]) /
+(pltt[[4]] | pltt[[5]] | pltt[[6]]) /
+(pltt[[7]] | plot_spacer() | plot_spacer()) +  plot_layout(guides = "collect")
 ###############################################################################
 ## Relationship between statistical power, sample size and log fold change 
 ## (log mean abundance = 5)

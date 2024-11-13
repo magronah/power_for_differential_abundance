@@ -6,7 +6,7 @@ source("utils.R")
 ##' This script fits and saves all the results that will 
 ##' needed for the main analysis
 ######################################################
-path  =  "datasets2/"
+path  =  "datasets/"
 
 countdata_list_obs  =  readRDS(file = paste0(path,"data.rds"))
 metadata_list_obs   =  readRDS(file = paste0(path,"metadata.rds"))
